@@ -1,0 +1,921 @@
+<!-- save as apnaparivar_app.html and open in browser -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ApnaParivar — Full Prototype</title>
+<style>
+  /* ---- Theme & reset ---- */
+  :root{
+    --bg:#0b1220; --card:#0f1724; --muted:#9aa6bd; --accent:#60a5fa; --accent2:#8b5cf6; --glass: rgba(255,255,255,0.04);
+    --radius:14px; --shadow: 0 12px 40px rgba(2,6,23,0.6);
+  }
+  body.light { --bg:#f5f8ff; --card:#fff; --muted:#546178; --accent:#0077ff; --accent2:#7c3aed; --glass: rgba(0,0,0,0.03); --shadow: 0 8px 24px rgba(2,6,23,0.08); color:#0b1220; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter, Poppins, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;background:linear-gradient(180deg,var(--bg),#000); color:#e6f0ff; min-height:100vh;}
+  a{color:var(--accent)}
+  .app{display:flex; min-height:100vh;}
+  /* sidebar */
+  .sidebar{width:250px;padding:28px;background:linear-gradient(180deg,#07284a,#001628); box-shadow:4px 0 30px rgba(0,0,0,0.6); display:flex;flex-direction:column;}
+  .logo{font-weight:800;font-size:20px; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:14px}
+  .side-nav{display:flex;flex-direction:column;gap:8px}
+  .side-nav button{background:transparent;border:none;color:rgba(255,255,255,0.92);text-align:left;padding:10px;border-radius:10px;cursor:pointer;font-weight:600;display:flex;gap:10px;align-items:center}
+  .side-nav button.active, .side-nav button:hover{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#021129; transform:translateX(6px)}
+  .side-foot{margin-top:auto;color:var(--muted);font-size:13px}
+  .small{font-size:13px;color:var(--muted)}
+  /* main area */
+  .main{flex:1;padding:26px;overflow:auto}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .searchBar{display:flex;gap:8px;align-items:center}
+  .input, .select{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:var(--card);color:inherit}
+  .btn{background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;color:#021129;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 10px 30px rgba(96,165,250,0.12)}
+  .card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-top:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+  .member{display:flex;gap:12px;align-items:center;padding:10px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent)}
+  .avatar{width:64px;height:64px;border-radius:12px;background:linear-gradient(90deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;color:#021129}
+  .muted{color:var(--muted)}
+  .sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .chip{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:999px;color:var(--muted)}
+  .field-row{display:flex;gap:8px;margin-top:8px}
+  .prog-field{display:flex;gap:8px;align-items:center}
+  .danger{background:linear-gradient(90deg,#ff6b6b,#ff7b6b);color:#111}
+  .ok{background:linear-gradient(90deg,#34d399,#22c55e);color:#021129}
+  .footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+  /* responsive */
+  @media (max-width:900px){ .sidebar{display:none} .main{padding:14px} }
+  /* small helper */
+  .help{font-size:13px;color:var(--muted);margin-top:6px}
+  /* nice animations */
+  .fadeIn{animation:fadeIn .4s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  /* form */
+  label{display:block;margin-bottom:6px;color:var(--muted);font-size:13px}
+  .file-preview{max-width:120px;border-radius:10px;object-fit:cover}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="logo">ApnaParivar+</div>
+
+    <div class="side-nav" id="nav">
+      <button data-route="home" class="active">🏠 Home</button>
+      <button data-route="dashboard">📋 Dashboard</button>
+      <button data-route="family">🌳 Families</button>
+      <button data-route="add">➕ Add Member</button>
+      <button data-route="memory">🖼 Memory Wall</button>
+      <button data-route="chat">💬 Chat</button>
+      <button data-route="analytics">📊 Analytics</button>
+      <button data-route="admin">🔐 Admins</button>
+      <button data-route="billing">💳 Billing</button>
+      <button data-route="search">🔎 Search</button>
+    </div>
+
+    <div style="height:12px"></div>
+    <div class="side-foot">
+      <div id="loggedName" style="font-weight:700">—</div>
+      <div class="small" id="loggedEmail">—</div>
+      <div style="height:8px"></div>
+      <button id="logoutBtn" class="btn" style="width:100%;font-weight:700">Sign out</button>
+      <div style="height:8px"></div>
+      <div class="help">Theme: <button id="themeBtn" class="chip">Toggle</button></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div id="viewContainer"><!-- SPA content injected here --></div>
+    <div class="footer">© 2025 ApnaParivar • Demo prototype — replace auth & storage with backend for production</div>
+  </main>
+</div>
+
+<script>
+/* ========== STORAGE KEYS ========== */
+const AUTH_KEY = 'APNA_PARIVAR_AUTH_V2'; // stores users, sessions
+const APP_KEY  = 'APNA_PARIVAR_APP_V2';  // stores families, etc.
+
+/* ========== UTIL: SHA-256 (web crypto) ========== */
+async function sha256(str){
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest('SHA-256', enc.encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ========== BOOTSTRAP: ensure data structure ========== */
+function loadAuth(){ return JSON.parse(localStorage.getItem(AUTH_KEY) || '{"users":[], "sessions":{}}'); }
+function saveAuth(db){ localStorage.setItem(AUTH_KEY, JSON.stringify(db)); }
+function loadApp(){ return JSON.parse(localStorage.getItem(APP_KEY) || '{"families":[]}'); }
+function saveApp(db){ localStorage.setItem(APP_KEY, JSON.stringify(db)); }
+
+(function bootstrap(){
+  // create initial superadmin user if none (demo convenience)
+  const auth = loadAuth();
+  if(auth.users.length === 0){
+    // create demo superadmin
+    sha256('superpass').then(hash=>{
+      auth.users.push({ email:'superadmin@gmail.com', name:'Super Admin', hash, role:'superadmin', createdAt: new Date().toISOString() });
+      saveAuth(auth);
+    });
+  }
+  // ensure at least one family? not necessary
+})();
+
+/* ========== SPA ROUTER ========== */
+const navButtons = document.querySelectorAll('.side-nav button');
+navButtons.forEach(b=> b.addEventListener('click', ()=> navigate(b.dataset.route)));
+document.getElementById('logoutBtn').addEventListener('click', logout);
+document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+function navigate(route){
+  navButtons.forEach(b=> b.classList.toggle('active', b.dataset.route===route));
+  renderRoute(route);
+}
+
+/* ========== THEME ========= */
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  localStorage.setItem('ap_theme', document.body.classList.contains('light') ? 'light':'dark');
+}
+(function loadTheme(){
+  if(localStorage.getItem('ap_theme')==='light') document.body.classList.add('light');
+})();
+
+/* ========== AUTH HELPERS ========= */
+async function signup(email, password, name){
+  email = email.trim().toLowerCase();
+  if(!email.endsWith('@gmail.com')) throw 'Use Gmail only';
+  const db = loadAuth();
+  if(db.users.some(u=>u.email===email)) throw 'Email already exists';
+  const h = await sha256(password);
+  const user = { email, hash:h, name: name||email.split('@')[0], createdAt: new Date().toISOString(), role:null }; // role null by default
+  db.users.push(user);
+  saveAuth(db);
+  return user;
+}
+async function signin(email, password){
+  email = email.trim().toLowerCase();
+  const db = loadAuth();
+  const h = await sha256(password);
+  const user = db.users.find(u=>u.email===email && u.hash===h);
+  if(!user) throw 'Invalid credentials';
+  db.sessions.currentUser = { email:user.email, name:user.name, role:user.role||null };
+  saveAuth(db);
+  return db.sessions.currentUser;
+}
+function signout(){
+  const db = loadAuth(); delete db.sessions.currentUser; saveAuth(db);
+}
+function currentUser(){ const db=loadAuth(); return db.sessions.currentUser || null; }
+
+/* ========== APP LOGIC ========= */
+
+/* Helpers for family & member management */
+function createFamily(name){
+  const db = loadApp();
+  const famId = 'fam_' + Date.now();
+  const user = currentUser();
+  if(!user) throw 'Not logged in';
+  const family = {
+    id: famId,
+    name,
+    createdBy: user.email,
+    createdAt: new Date().toISOString(),
+    admins: { admin1: user.email, admin2:null, admin3:null },
+    approvedUsers: [user.email],
+    members: [], // each {id,name,relation,dob,photo,extra:{k:v,...}}
+    memories: [],
+    chat: []
+  };
+  db.families.push(family);
+  saveApp(db);
+  return family;
+}
+
+function getFamily(id){
+  const db = loadApp();
+  return db.families.find(f=>f.id===id);
+}
+function saveFamily(fam){
+  const db = loadApp();
+  const idx = db.families.findIndex(x=>x.id===fam.id);
+  if(idx>=0) db.families[idx] = fam;
+  else db.families.push(fam);
+  saveApp(db);
+}
+
+/* Authorization checks */
+function isSuperAdmin(){
+  const u = currentUser(); if(!u) return false;
+  const auth = loadAuth();
+  const me = auth.users.find(x=>x.email===u.email);
+  return me && me.role==='superadmin';
+}
+function isFamilyAdmin(fam){
+  const u = currentUser(); if(!u) return false;
+  return [fam.admins.admin1, fam.admins.admin2, fam.admins.admin3].includes(u.email);
+}
+function isApprovedViewer(fam){
+  const u = currentUser(); if(!u) return false;
+  return fam.approvedUsers.includes(u.email) || isFamilyAdmin(fam) || isSuperAdmin();
+}
+
+/* Member operations (admins only) */
+function addMemberToFamily(famId, memberObj){
+  const fam = getFamily(famId);
+  if(!fam) throw 'Family not found';
+  if(!isFamilyAdmin(fam) && !isSuperAdmin()) throw 'Permission denied';
+  memberObj.id = 'm_' + Date.now();
+  // ensure no more than 10 programmable fields
+  memberObj.extra = memberObj.extra || {};
+  if(Object.keys(memberObj.extra).length > 10) throw 'Max 10 extra fields allowed';
+  fam.members.push(memberObj);
+  saveFamily(fam);
+  return memberObj;
+}
+function editMember(famId, memberId, update){
+  const fam = getFamily(famId);
+  if(!fam) throw 'Family not found';
+  if(!isFamilyAdmin(fam) && !isSuperAdmin()) throw 'Permission denied';
+  const idx = fam.members.findIndex(m=>m.id===memberId);
+  if(idx<0) throw 'Member not found';
+  fam.members[idx] = {...fam.members[idx], ...update};
+  saveFamily(fam);
+}
+function deleteMember(famId, memberId){
+  const fam = getFamily(famId);
+  if(!fam) throw 'Family not found';
+  if(!isFamilyAdmin(fam) && !isSuperAdmin()) throw 'Permission denied';
+  fam.members = fam.members.filter(m=>m.id!==memberId);
+  saveFamily(fam);
+}
+
+/* Admin management */
+function addFamilyAdmin(famId, adminSlot, email){
+  const fam = getFamily(famId); if(!fam) throw 'Family not found';
+  if(fam.admins.admin1 !== currentUser().email && !isSuperAdmin()) throw 'Only admin1 or SuperAdmin can add other admins';
+  if(!['admin1','admin2','admin3'].includes(adminSlot)) throw 'Invalid admin slot';
+  fam.admins[adminSlot] = email.toLowerCase();
+  // also ensure admin is in approvedUsers
+  if(!fam.approvedUsers.includes(email.toLowerCase())) fam.approvedUsers.push(email.toLowerCase());
+  saveFamily(fam);
+}
+
+/* Approve user to view family */
+function approveUserForFamily(famId, email){
+  const fam = getFamily(famId); if(!fam) throw 'Family not found';
+  if(!isFamilyAdmin(fam) && !isSuperAdmin()) throw 'Only admins can approve';
+  if(!fam.approvedUsers.includes(email.toLowerCase())) fam.approvedUsers.push(email.toLowerCase());
+  saveFamily(fam);
+}
+
+/* Chat, Memory */
+function addMemory(famId, title, dataUrl){
+  const fam = getFamily(famId); if(!fam) throw 'Family not found';
+  if(!isFamilyAdmin(fam) && !isApprovedViewer(fam) && !isSuperAdmin()) throw 'Not allowed';
+  fam.memories.push({ id:'mem_'+Date.now(), title, photo:dataUrl, createdAt: new Date().toISOString()});
+  saveFamily(fam);
+}
+function addChatMessage(famId, text){
+  const fam = getFamily(famId); if(!fam) throw 'Family not found';
+  const user = currentUser(); if(!user) throw 'Not logged in';
+  fam.chat.push({ id:'c_'+Date.now(), from:user.email, text, at: new Date().toISOString() });
+  saveFamily(fam);
+}
+
+/* Subscription billing simulation */
+function subscriptionStatus(fam){
+  const f = getFamily(fam.id);
+  const created = new Date(f.createdAt);
+  const now = new Date();
+  const years = (now - created) / (1000*60*60*24*365.25);
+  if(years < 1) return { status:'free', due:0, yearsElapsed: Math.floor(years) };
+  // simple yearly fee 500 per year after first
+  const dueYears = Math.floor(years) - 0; // number of full years elapsed including year1? keep simple: if years>=1 then due
+  const amountDue = 500 * Math.max(0, Math.floor(years)); // For demo
+  return { status: amountDue>0 ? 'due' : 'paid', due: amountDue, yearsElapsed: Math.floor(years) };
+}
+
+/* Global search */
+function globalSearch(q){
+  q = (q||'').toLowerCase();
+  if(!q) return [];
+  const db = loadApp();
+  const results = [];
+  db.families.forEach(f=>{
+    f.members.forEach(m=>{
+      const combined = `${m.name} ${m.relation} ${Object.values(m.extra||{}).join(' ')}`.toLowerCase();
+      if(combined.includes(q)) results.push({ familyId: f.id, familyName: f.name, member: m });
+    });
+  });
+  return results;
+}
+
+/* ========== VIEWS: SPA templates ========== */
+
+/* HOME - login/signup */
+function viewHome(){
+  const auth = loadAuth();
+  // minimal home view: if logged-in show dashboard link; else show login/signup forms
+  const me = currentUser();
+  if(me){
+    renderHTML(`<div class="card fadeIn">
+      <div class="sectionTitle"><h2>Welcome back, ${me.name}</h2><div class="chip">${me.email}</div></div>
+      <p class="help">Click Dashboard to continue.</p>
+    </div>`);
+    return;
+  }
+
+  renderHTML(`
+    <div class="card fadeIn">
+      <div style="display:flex;gap:18px;align-items:center;justify-content:space-between">
+        <div>
+          <h2>Welcome to ApnaParivar</h2>
+          <p class="muted">Map your family, store memories, and manage access with role-based control.</p>
+        </div>
+        <div style="max-width:360px">
+          <div style="display:flex;gap:8px;">
+            <button class="btn" onclick="showLoginForm()">Sign In</button>
+            <button class="btn" onclick="showSignupForm()">Sign Up</button>
+          </div>
+          <div id="authForm" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </div>
+  `);
+}
+
+/* Render helper */
+function renderHTML(html){
+  document.getElementById('viewContainer').innerHTML = html;
+}
+
+/* Show login/signup forms (embedded) */
+function showLoginForm(){
+  renderHTML(`
+    <div class="card fadeIn">
+      <h3>Sign In (Gmail only)</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="inEmail" placeholder="you@gmail.com" class="input" />
+        <input id="inPass" placeholder="password" type="password" class="input" />
+        <button class="btn" onclick="handleLogin()">Sign In</button>
+      </div>
+      <div class="help">First user created becomes SuperAdmin (demo). Use Gmail only.</div>
+      <div id="loginMsg" class="muted"></div>
+    </div>
+  `);
+}
+function showSignupForm(){
+  renderHTML(`
+    <div class="card fadeIn">
+      <h3>Create Account</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="suName" placeholder="Full name" class="input" />
+        <input id="suEmail" placeholder="you@gmail.com" class="input" />
+        <input id="suPass" placeholder="password" type="password" class="input" />
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="handleSignup()">Create</button>
+          <button class="btn" onclick="showLoginForm()">Back</button>
+        </div>
+        <div id="signupMsg" class="muted"></div>
+      </div>
+    </div>
+  `);
+}
+
+/* Dashboard view - lists families you belong to (owner/admins) */
+function viewDashboard(){
+  const me = currentUser();
+  if(!me){ alert('Please login'); renderRoute('home'); return; }
+  const db = loadApp();
+  // families where user is approved or admin or createdBy (owner)
+  const myFamilies = db.families.filter(f => f.approvedUsers.includes(me.email) || Object.values(f.admins).includes(me.email) || f.createdBy===me.email);
+  const familyCards = myFamilies.map(f=>`
+    <div class="card fadeIn">
+      <div class="sectionTitle"><div>
+        <h3>${f.name}</h3>
+        <div class="muted">Owner: ${f.createdBy} • Admins: ${Object.values(f.admins).filter(Boolean).join(', ')}</div>
+      </div>
+      <div>
+        <button class="btn" onclick="openFamily('${f.id}')">Open</button>
+        <button class="btn" onclick="downloadFamily('${f.id}')">Export</button>
+      </div></div>
+    </div>
+  `).join('') || '<div class="card">You are not a member of any family yet. Create or ask admin to approve.</div>';
+
+  renderHTML(`
+    <div class="card fadeIn">
+      <div class="sectionTitle"><h2>Dashboard</h2><div><button class="btn" onclick="renderRoute('family')">Create / Browse Families</button></div></div>
+      <p class="muted">Families you can access:</p>
+      ${familyCards}
+    </div>
+  `);
+}
+
+/* Families list & creation (SuperAdmin & any logged user can create a family; owner becomes admin1) */
+function viewFamilies(){
+  const me = currentUser(); if(!me){ alert('Please login'); renderRoute('home'); return; }
+  const db = loadApp();
+  const rows = (db.families.length? db.families.map(f=>`
+    <div style="display:flex;justify-content:space-between;align-items:center" class="fadeIn">
+      <div>
+        <b>${f.name}</b><div class="muted">${f.createdBy} • ${f.createdAt.split('T')[0]}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="openFamily('${f.id}')">Open</button>
+        ${ (isSuperAdmin()|| f.createdBy===me.email) ? `<button class="btn" onclick="deleteFamily('${f.id}')">Delete</button>` : '' }
+      </div>
+    </div>
+  `).join('') : '<div class="muted">No families yet</div>');
+  renderHTML(`
+    <div class="card fadeIn">
+      <div class="sectionTitle"><h2>Families</h2><div><button class="btn" onclick="showCreateFamily()">+ New Family</button></div></div>
+      <div style="margin-top:12px">${rows}</div>
+    </div>
+  `);
+}
+function showCreateFamily(){
+  renderHTML(`
+    <div class="card fadeIn">
+      <h3>Create New Family</h3>
+      <div style="display:flex;gap:8px">
+        <input id="newFamilyName" class="input" placeholder="Family Name (e.g., Sharma Family)" />
+        <button class="btn" onclick="handleCreateFamily()">Create</button>
+      </div>
+      <div class="help">Creator becomes admin1 of the family.</div>
+    </div>
+  `);
+}
+function handleCreateFamily(){
+  const name = document.getElementById('newFamilyName').value.trim();
+  if(!name) return alert('Enter family name');
+  try{
+    const fam = createFamily(name);
+    alert('Family created: ' + fam.name);
+    renderRoute('dashboard');
+  }catch(e){ alert(e); }
+}
+function deleteFamily(fid){
+  if(!confirm('Delete family permanently?')) return;
+  const db = loadApp();
+  db.families = db.families.filter(f=>f.id!==fid);
+  saveApp(db);
+  alert('Family deleted');
+  renderRoute('family');
+}
+
+/* Open family: set currentFamily id in session (simple) */
+function openFamily(fid){
+  const fam = getFamily(fid);
+  if(!fam) return alert('Not found');
+  // set active
+  sessionStorage.setItem('ap_activeFamily', fid);
+  renderFamilyOverview(fid);
+}
+
+/* Family overview */
+function renderFamilyOverview(fid){
+  const me = currentUser(); if(!me) { alert('Login'); renderRoute('home'); return; }
+  const fam = getFamily(fid);
+  if(!fam) return alert('Family not found');
+  const adminBox = isFamilyAdmin(fam) ? `<div class="help">You are an admin for this family.</div>` : `<div class="help">You are ${ fam.approvedUsers.includes(me.email) ? 'approved viewer' : 'not approved' }.</div>`;
+  const membersHtml = fam.members.length ? fam.members.map(m=>`
+    <div class="member">
+      <div class="avatar">${(m.name||'')[0]||'?'}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div><b>${m.name}</b><div class="muted">${m.relation} • ${m.dob || ''}</div></div>
+        <div style="display:flex;gap:8px">
+          ${ isFamilyAdmin(fam) || isSuperAdmin() ? `<button class="btn" onclick="showEditMember('${fid}','${m.id}')">Edit</button>
+          <button class="btn danger" onclick="handleDeleteMember('${fid}','${m.id}')">Delete</button>` : '' }
+        </div></div>
+      </div>
+      </div>
+      <div style="margin-left:76px">${ Object.entries(m.extra||{}).map(([k,v])=>`<div class="chip">${k}: ${v}</div>`).join(' ') }</div>
+  `).join('') : '<div class="muted">No members yet</div>';
+
+  renderHTML(`
+    <div class="card fadeIn">
+      <div class="sectionTitle"><h2>${fam.name}</h2><div class="chip">Admins: ${Object.values(fam.admins).filter(Boolean).join(', ')}</div></div>
+      ${adminBox}
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn" onclick="renderRoute('add')">Add Member</button>
+        <button class="btn" onclick="renderRoute('memory')">Memory Wall</button>
+        <button class="btn" onclick="renderRoute('chat')">Open Chat</button>
+        ${ isFamilyAdmin(fam) ? `<button class="btn" onclick="showAdminPanel('${fid}')">Admin Panel</button>` : '' }
+      </div>
+
+      <div class="card" style="margin-top:12px"><h3>Members</h3>${membersHtml}</div>
+
+      <div class="card" style="margin-top:12px">
+        <h3>Family Summary</h3>
+        <div class="muted">Created: ${fam.createdAt.split('T')[0]}</div>
+        <div style="margin-top:10px">${ fam.memories.length ? `<b>${fam.memories.length}</b> memories saved` : `<div class="muted">No memories yet</div>` }</div>
+      </div>
+    </div>
+  `);
+}
+
+/* ADD MEMBER view */
+function viewAddMember(){
+  const me = currentUser(); if(!me){ alert('Please login'); renderRoute('home'); return; }
+  const active = sessionStorage.getItem('ap_activeFamily');
+  if(!active){ alert('Open a family from Dashboard or Families first'); renderRoute('family'); return; }
+  const fam = getFamily(active);
+  const canAdd = isFamilyAdmin(fam) || isSuperAdmin();
+  renderHTML(`
+    <div class="card fadeIn">
+      <div class="sectionTitle"><h2>Add Member — ${fam.name}</h2><div><div class="muted">Admins only can add members</div></div></div>
+      <form id="memberForm" style="margin-top:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><label>Name</label><input id="mName" class="input" /></div>
+          <div><label>Relation</label><input id="mRelation" class="input" /></div>
+          <div><label>Date of Birth</label><input id="mDOB" type="date" class="input" /></div>
+          <div><label>Photo</label><input id="mPhoto" type="file" accept="image/*" class="input" /></div>
+        </div>
+        <div style="margin-top:12px"><label>Programmable fields (max 10)</label>
+          <div id="progFields"></div>
+          <div style="margin-top:8px"><button type="button" class="btn" id="addFieldBtn">+ Add Field</button></div>
+        </div>
+        <div style="margin-top:12px">
+          <button type="button" class="btn" id="saveMemberBtn" ${canAdd? '':'disabled'}>${canAdd? 'Save Member':'Admins only'}</button>
+        </div>
+        <div id="memberMsg" class="help"></div>
+      </form>
+    </div>
+  `);
+
+  // field logic
+  let fieldCount = 0;
+  document.getElementById('addFieldBtn').addEventListener('click', ()=>{
+    if(fieldCount >= 10) return alert('Max 10 fields');
+    fieldCount++;
+    const idk = 'k'+fieldCount, idv='v'+fieldCount;
+    const row = document.createElement('div'); row.className='prog-field';
+    row.innerHTML = `<input id="${idk}" placeholder="Field name" class="input" style="width:40%"/><input id="${idv}" placeholder="Value" class="input"/><button class="btn danger" type="button">Remove</button>`;
+    row.querySelector('button').addEventListener('click', ()=> { row.remove(); fieldCount--; });
+    document.getElementById('progFields').appendChild(row);
+  });
+
+  // save member
+  document.getElementById('saveMemberBtn').addEventListener('click', async ()=>{
+    if(!canAdd) return alert('Only admins can add members');
+    const name = document.getElementById('mName').value.trim();
+    const relation = document.getElementById('mRelation').value.trim();
+    const dob = document.getElementById('mDOB').value;
+    const file = document.getElementById('mPhoto').files[0];
+    if(!name || !relation) return document.getElementById('memberMsg').innerText = 'Name & relation required';
+    // collect fields
+    const extras = {};
+    document.querySelectorAll('.prog-field').forEach(row=>{
+      const k = row.querySelector('input:nth-child(1)').value.trim();
+      const v = row.querySelector('input:nth-child(2)').value.trim();
+      if(k) extras[k] = v;
+    });
+    // photo to dataURL
+    if(file){
+      const dataUrl = await readFileAsDataURL(file);
+      try{
+        const newM = addMemberToFamily(fam.id, { name, relation, dob, photo: dataUrl, extra: extras });
+        document.getElementById('memberMsg').innerText = 'Member added';
+        setTimeout(()=>renderFamilyOverview(fam.id),700);
+      }catch(e){ alert(e); }
+    }else{
+      try{
+        addMemberToFamily(fam.id, { name, relation, dob, photo:null, extra: extras });
+        document.getElementById('memberMsg').innerText = 'Member added';
+        setTimeout(()=>renderFamilyOverview(fam.id),700);
+      }catch(e){ alert(e); }
+    }
+  });
+}
+
+/* Helpers read file */
+function readFileAsDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
+
+/* show edit member */
+function showEditMember(famId, memberId){
+  const fam = getFamily(famId); const m = fam.members.find(x=>x.id===memberId);
+  if(!m) return alert('Member not found');
+  if(!isFamilyAdmin(fam) && !isSuperAdmin()) return alert('Only admins can edit');
+  renderHTML(`
+    <div class="card fadeIn">
+      <h3>Edit Member</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><label>Name</label><input id="eName" class="input" value="${escapeHtml(m.name)}"/></div>
+        <div><label>Relation</label><input id="eRelation" class="input" value="${escapeHtml(m.relation)}"/></div>
+        <div><label>DOB</label><input id="eDOB" type="date" class="input" value="${m.dob||''}"/></div>
+        <div><label>Photo</label><input id="ePhoto" type="file" class="input"/></div>
+      </div>
+      <div style="margin-top:8px"><label>Extra fields (edit)</label>
+        <div id="editFields"></div>
+        <div style="margin-top:8px"><button class="btn" id="addEditFieldBtn">+ Add Field</button></div>
+      </div>
+      <div style="margin-top:12px"><button class="btn" onclick="saveEditMember('${famId}','${memberId}')">Save</button> <button class="btn" onclick="renderFamilyOverview('${famId}')">Cancel</button></div>
+    </div>
+  `);
+  // populate fields
+  const container = document.getElementById('editFields');
+  Object.entries(m.extra||{}).forEach(([k,v])=>{
+    const row = document.createElement('div'); row.className='prog-field';
+    row.innerHTML = `<input class="input" value="${escapeHtml(k)}" style="width:35%"/><input class="input" value="${escapeHtml(v)}"/><button class="btn danger" type="button">Remove</button>`;
+    row.querySelector('button').addEventListener('click', ()=>row.remove());
+    container.appendChild(row);
+  });
+  document.getElementById('addEditFieldBtn').addEventListener('click', ()=>{
+    const row = document.createElement('div'); row.className='prog-field';
+    row.innerHTML = `<input class="input" placeholder="Field name" style="width:35%"/><input class="input" placeholder="Value"/><button class="btn danger" type="button">Remove</button>`;
+    row.querySelector('button').addEventListener('click', ()=>row.remove());
+    container.appendChild(row);
+  });
+}
+
+/* saving edit */
+async function saveEditMember(famId, memberId){
+  const fam = getFamily(famId); const m = fam.members.find(x=>x.id===memberId);
+  if(!m) return alert('Member not found');
+  if(!isFamilyAdmin(fam) && !isSuperAdmin()) return alert('Only admins can save');
+  const name = document.getElementById('eName').value.trim();
+  const relation = document.getElementById('eRelation').value.trim();
+  const dob = document.getElementById('eDOB').value;
+  const file = document.getElementById('ePhoto').files[0];
+  const newExtra = {};
+  document.querySelectorAll('#editFields .prog-field').forEach(row=>{
+    const k = row.querySelector('input:nth-child(1)').value.trim();
+    const v = row.querySelector('input:nth-child(2)').value.trim();
+    if(k) newExtra[k]=v;
+  });
+  if(file){
+    const d = await readFileAsDataURL(file);
+    editMember(famId, memberId, { name, relation, dob, photo:d, extra:newExtra });
+  }else{
+    editMember(famId, memberId, { name, relation, dob, extra:newExtra });
+  }
+  alert('Saved');
+  renderFamilyOverview(famId);
+}
+
+/* delete member */
+function handleDeleteMember(famId, memberId){
+  if(!confirm('Delete member permanently?')) return;
+  try{ deleteMember(famId, memberId); alert('Deleted'); renderFamilyOverview(famId);}catch(e){alert(e)}
+}
+
+/* MEMORY view */
+function viewMemory(){
+  const me = currentUser(); if(!me){ alert('Please login'); renderRoute('home'); return; }
+  const active = sessionStorage.getItem('ap_activeFamily'); if(!active){ alert('Open a family first'); renderRoute('family'); return; }
+  const fam = getFamily(active);
+  renderHTML(`
+    <div class="card fadeIn">
+      <div class="sectionTitle"><h2>Memory Wall — ${fam.name}</h2><div class="muted">Upload photos for family</div></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:12px">
+        <input id="memTitle" placeholder="Caption" class="input"/>
+        <input id="memFile" type="file" accept="image/*" class="input"/>
+        <button class="btn" onclick="handleUploadMemory('${fam.id}')">Upload</button>
+      </div>
+      <div style="margin-top:12px">
+        ${ fam.memories.length ? fam.memories.map(mem=>`<div style="display:inline-block;margin:8px"><img src="${mem.photo}" style="width:180px;border-radius:10px"/><div class="muted">${mem.title||''}</div></div>`).join('') : '<div class="muted">No memories yet</div>' }
+      </div>
+    </div>
+  `);
+}
+async function handleUploadMemory(fid){
+  const f = document.getElementById('memFile').files[0]; const t = document.getElementById('memTitle').value.trim();
+  if(!f) return alert('Choose image');
+  const data = await readFileAsDataURL(f);
+  try{ addMemory(fid,t,data); alert('Uploaded'); viewMemory(); }catch(e){alert(e)}
+}
+
+/* CHAT view */
+function viewChat(){
+  const me = currentUser(); if(!me){ alert('login'); renderRoute('home'); return; }
+  const active = sessionStorage.getItem('ap_activeFamily'); if(!active){ alert('Open a family'); renderRoute('family'); return; }
+  const fam = getFamily(active);
+  renderHTML(`
+    <div class="card fadeIn">
+      <div class="sectionTitle"><h2>Chat — ${fam.name}</h2><div class="muted">Family chat (local demo)</div></div>
+      <div id="chatBox" style="background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;min-height:200px;margin-top:12px;max-height:350px;overflow:auto">
+        ${(fam.chat||[]).map(c=>`<div style="margin:8px"><b>${c.from}:</b> ${escapeHtml(c.text)} <div class="muted" style="font-size:12px">${new Date(c.at).toLocaleString()}</div></div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px"><input id="chatInput" class="input" placeholder="Type a message"/><button class="btn" onclick="handleSendChat('${fam.id}')">Send</button></div>
+    </div>
+  `);
+}
+function handleSendChat(fid){
+  const t = document.getElementById('chatInput').value.trim(); if(!t) return;
+  try{ addChatMessage(fid,t); document.getElementById('chatInput').value=''; viewChat(); }catch(e){alert(e)}
+}
+
+/* Analytics */
+function viewAnalytics(){
+  const active = sessionStorage.getItem('ap_activeFamily'); if(!active){ alert('Open a family'); renderRoute('family'); return; }
+  const fam = getFamily(active);
+  const counts = {};
+  fam.members.forEach(m=> counts[m.relation] = (counts[m.relation]||0)+1 );
+  const rows = Object.entries(counts).map(([k,v])=>`<div class="card"><b>${k}</b><div class="muted">${v}</div></div>`).join('');
+  renderHTML(`
+    <div class="card fadeIn"><h2>Analytics — ${fam.name}</h2>
+      <div class="grid" style="margin-top:12px">${ rows || '<div class="muted">No members to analyze</div>' }</div>
+    </div>
+  `);
+}
+
+/* ADMIN management (admins only) */
+function viewAdminPanel(){
+  const active = sessionStorage.getItem('ap_activeFamily'); if(!active){ alert('Open a family'); renderRoute('family'); return; }
+  showAdminPanel(active);
+}
+function showAdminPanel(fid){
+  const fam = getFamily(fid);
+  if(!fam) return alert('Not found');
+  if(!isFamilyAdmin(fam) && !isSuperAdmin()) return alert('Only family admins or SuperAdmin');
+  renderHTML(`
+    <div class="card fadeIn">
+      <h2>Admin Panel — ${fam.name}</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div><label>Admin1 (owner)</label><input class="input" id="adm1" value="${fam.admins.admin1||''}" /></div>
+        <div><label>Admin2</label><input class="input" id="adm2" value="${fam.admins.admin2||''}" /></div>
+        <div><label>Admin3</label><input class="input" id="adm3" value="${fam.admins.admin3||''}" /></div>
+      </div>
+      <div style="margin-top:8px"><button class="btn" onclick="saveAdmins('${fam.id}')">Save Admins</button></div>
+      <div style="margin-top:12px">
+        <h3>Approve Users</h3>
+        <div style="display:flex;gap:8px"><input id="approveEmail" class="input" placeholder="user@gmail.com"/><button class="btn" onclick="handleApprove('${fam.id}')">Approve</button></div>
+        <div style="margin-top:8px" id="approvedList">${fam.approvedUsers.map(u=>`<div class="chip">${u}</div>`).join(' ')}</div>
+      </div>
+    </div>
+  `);
+}
+function saveAdmins(fid){
+  const fam = getFamily(fid);
+  const a1 = document.getElementById('adm1').value.trim();
+  const a2 = document.getElementById('adm2').value.trim();
+  const a3 = document.getElementById('adm3').value.trim();
+  if(!a1) return alert('admin1 required');
+  try{ addFamilyAdmin(fid,'admin1',a1); addFamilyAdmin(fid,'admin2',a2||null); addFamilyAdmin(fid,'admin3',a3||null); alert('Admins saved'); showAdminPanel(fid); }catch(e){alert(e)}
+}
+function handleApprove(fid){
+  const em = document.getElementById('approveEmail').value.trim();
+  if(!em.endsWith('@gmail.com')) return alert('Use Gmail only');
+  try{ approveUserForFamily(fid, em); alert('Approved'); showAdminPanel(fid); }catch(e){alert(e)}
+}
+
+/* Billing (SuperAdmin can view all families' subscription due) */
+function viewBilling(){
+  if(!isSuperAdmin()) return renderHTML(`<div class="card">Only SuperAdmin can view billing. Current user role: ${currentUser()?.email||'not logged in'}</div>`);
+  const db = loadApp();
+  const rows = db.families.map(f=>{
+    const s = subscriptionStatus(f);
+    return `<div style="display:flex;justify-content:space-between;align-items:center" class="fadeIn"><div><b>${f.name}</b><div class="muted">Created: ${f.createdAt.split('T')[0]}</div></div><div><div class="${s.status==='due'?'danger chip':'ok chip'}">${s.status.toUpperCase()}</div><div class="muted">${s.due? '₹'+s.due : 'Free'}</div><div style="height:6px"></div><button class="btn" onclick="markPaid('${f.id}')">Mark Paid</button></div></div>`;
+  }).join('');
+  renderHTML(`<div class="card"><h2>Billing & Subscriptions</h2>${rows||'<div class="muted">No families</div>'}</div>`);
+}
+function markPaid(fid){
+  const f = getFamily(fid); if(!f) return;
+  // for demo we set createdAt to now so subscription becomes free for another year
+  f.createdAt = new Date().toISOString();
+  saveFamily(f);
+  alert('Marked paid (createdAt reset for demo)');
+  viewBilling();
+}
+
+/* Search view */
+function viewSearch(){
+  renderHTML(`
+    <div class="card fadeIn">
+      <div class="sectionTitle"><h2>Search Members</h2><div class="muted">Search across all families</div></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <input id="q" class="input" placeholder="Name, relation, keyword"/>
+        <button class="btn" onclick="doSearch()">Search</button>
+      </div>
+      <div id="searchResults" style="margin-top:12px"></div>
+    </div>
+  `);
+}
+function doSearch(){
+  const q = document.getElementById('q').value.trim();
+  const res = globalSearch(q);
+  const el = document.getElementById('searchResults');
+  if(res.length===0) return el.innerHTML = '<div class="muted">No results</div>';
+  el.innerHTML = res.map(r=>`<div class="card"><b>${escapeHtml(r.member.name)}</b> <div class="muted">${r.member.relation} — ${escapeHtml(r.familyName)}</div><div style="margin-top:8px"><button class="btn" onclick="openFamily('${r.familyId}')">Open Family</button></div></div>`).join('');
+}
+
+/* Admin listing (SuperAdmin) */
+function viewAdmins(){
+  const db = loadAuth();
+  renderHTML(`<div class="card"><h2>Users</h2>${db.users.map(u=>`<div style="display:flex;justify-content:space-between"><div><b>${u.name}</b><div class="muted">${u.email} • role: ${u.role||'user'}</div></div><div></div></div>`).join('')}</div>`);
+}
+
+/* utility escape */
+function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+
+/* ========== ROUTE HANDLER ========== */
+function renderRoute(route){
+  // update active nav button
+  document.querySelectorAll('.side-nav button').forEach(b=> b.classList.toggle('active', b.dataset.route===route));
+  // ensure user info in sidebar
+  const me = currentUser();
+  document.getElementById('loggedName').textContent = me ? me.name : 'Not signed in';
+  document.getElementById('loggedEmail').textContent = me ? me.email : '';
+
+  switch(route){
+    case 'home': viewHome(); break;
+    case 'dashboard': viewDashboard(); break;
+    case 'family': viewFamilies(); break;
+    case 'add': viewAddMember(); break;
+    case 'memory': viewMemory(); break;
+    case 'chat': viewChat(); break;
+    case 'analytics': viewAnalytics(); break;
+    case 'admin': viewAdminPanel(); break;
+    case 'billing': viewBilling(); break;
+    case 'search': viewSearch(); break;
+    default: viewHome();
+  }
+}
+
+/* ========== HANDLERS for auth pages ========== */
+async function handleSignup(){
+  const name = document.getElementById('suName')?.value || document.getElementById('suName_main')?.value;
+  const email = document.getElementById('suEmail')?.value.trim();
+  const pass = document.getElementById('suPass')?.value || document.getElementById('suPass_main')?.value;
+  const msgEl = document.getElementById('signupMsg') || document.getElementById('signupMsg_main');
+  try{
+    await signup(email, pass, name);
+    // if no users had role superadmin, assign superadmin to first user
+    const auth = loadAuth();
+    if(!auth.users.some(u=>u.role==='superadmin')){ auth.users[0].role = 'superadmin'; saveAuth(auth); }
+    msgEl && (msgEl.textContent = 'Account created. Please sign in.');
+    // auto sign in for convenience
+    await signin(email, pass);
+    updateSidebarUser();
+    renderRoute('dashboard');
+  }catch(e){ if(msgEl) msgEl.textContent = e; else alert(e); }
+}
+async function handleLogin(){
+  const email = document.getElementById('inEmail')?.value || document.getElementById('inEmail_main')?.value;
+  const pass = document.getElementById('inPass')?.value || document.getElementById('inPass_main')?.value;
+  const msgEl = document.getElementById('loginMsg') || document.getElementById('loginMsg_main');
+  try{
+    await signin(email, pass);
+    updateSidebarUser();
+    renderRoute('dashboard');
+  }catch(e){ if(msgEl) msgEl.textContent = e; else alert(e); }
+}
+function logout(){ signout(); updateSidebarUser(); renderRoute('home'); }
+
+/* update sidebar text */
+function updateSidebarUser(){
+  const me = currentUser();
+  document.getElementById('loggedName').textContent = me ? me.name : 'Not signed in';
+  document.getElementById('loggedEmail').textContent = me ? me.email : '';
+}
+
+/* initialize SPA with home view */
+(function init(){
+  updateSidebarUser();
+  renderRoute('home');
+})();
+
+/* helper: export family as JSON */
+function downloadFamily(fid){
+  const fam = getFamily(fid);
+  if(!fam) return alert('Family not found');
+  const a = document.createElement('a');
+  const data = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(fam, null, 2));
+  a.href = data; a.download = (fam.name||'family')+'.json'; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* helper: simple deletion guard when deleting admin etc (left minimal) */
+
+/* ======== For convenience, expose some functions to global (used by inline onclick) ======= */
+window.navigate = navigate;
+window.renderRoute = renderRoute;
+window.showLoginForm = showLoginForm;
+window.showSignupForm = showSignupForm;
+window.handleSignup = handleSignup;
+window.handleLogin = handleLogin;
+window.openFamily = openFamily;
+window.viewAddMember = viewAddMember;
+window.downloadFamily = downloadFamily;
+window.addMemberToFamily = addMemberToFamily;
+window.readFileAsDataURL = readFileAsDataURL;
+window.showAdminPanel = showAdminPanel;
+window.approveUserForFamily = approveUserForFamily;
+window.markPaid = markPaid;
+window.globalSearch = globalSearch;
+window.signout = signout;
+window.logout = logout;
+window.saveAdmins = saveAdmins;
+window.handleApprove = handleApprove;
+window.handleCreateFamily = handleCreateFamily;
+window.viewBilling = viewBilling;
+
+/* helper to render home login & signup UI when not logged */
+document.addEventListener('click', function(e){
+  // capture clicks for inline forms if any (no-op)
+}, false);
+
+</script>
+</body>
+</html>
